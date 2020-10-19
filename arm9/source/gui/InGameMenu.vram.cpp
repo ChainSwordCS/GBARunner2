@@ -13,6 +13,7 @@
 #include "IconPlay_nbfc.h"
 #include "IconRestart_nbfc.h"
 #include "IconPower_nbfc.h"
+#include "IconBright_nbfc.h"
 #include "../cp15.h"
 #include "InGameMenu.h"
 
@@ -25,6 +26,7 @@ static const igm_action_t sActions[] =
 {
     { "Resume" },
     { "Reset" },
+	{ "Brightness" },
     { "Quit to rom browser" }
 };
 
@@ -253,10 +255,14 @@ int InGameMenu::Run()
     sIconObjAddrs[1] = _uiContext->GetUIManager().GetSubObjManager().Alloc(IconRestart_nbfc_size);
 	for (int i = 0; i < IconRestart_nbfc_size / 2; i++)
 		SPRITE_GFX_SUB[(sIconObjAddrs[1] >> 1) + i] = ((u16*)IconRestart_nbfc)[i];
+
+    sIconObjAddrs[2] = _uiContext->GetUIManager().GetSubObjManager().Alloc(IconBright_nbfc_size);
+	for (int i = 0; i < IconBright_nbfc_size / 2; i++)
+		SPRITE_GFX_SUB[(sIconObjAddrs[2] >> 1) + i] = ((u16*)IconBright_nbfc)[i];
         
-    sIconObjAddrs[2] = _uiContext->GetUIManager().GetSubObjManager().Alloc(IconPower_nbfc_size);
+    sIconObjAddrs[3] = _uiContext->GetUIManager().GetSubObjManager().Alloc(IconPower_nbfc_size);
 	for (int i = 0; i < IconPower_nbfc_size / 2; i++)
-		SPRITE_GFX_SUB[(sIconObjAddrs[2] >> 1) + i] = ((u16*)IconPower_nbfc)[i];
+		SPRITE_GFX_SUB[(sIconObjAddrs[3] >> 1) + i] = ((u16*)IconPower_nbfc)[i];
 
     _vramState = _uiContext->GetUIManager().GetSubObjManager().GetState();
 
@@ -289,11 +295,16 @@ int InGameMenu::Run()
                 next = 2;
             else if(_selectedEntry == 1)
                 next = 3;
-            else if(_selectedEntry == 2)
+			else if (_selectedEntry == 2)
+				next = 4;
+            else if(_selectedEntry == 3)
                 next = 0;
 
             while(!(*((vu16*)0x04000130) & 1));
-			break;
+			if (next != 4)
+				break;
+			else
+				REG_SEND_FIFO = 0x0400010F;
 		}
 		else if (_inputRepeater.GetTriggeredKeys() & KEY_B)
 		{

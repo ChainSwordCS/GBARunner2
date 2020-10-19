@@ -1,4 +1,5 @@
 #include <nds.h>
+#include <nds/arm7/serial.h>
 #include <string.h>
 #include "timer.h"
 #include "sound.h"
@@ -31,6 +32,20 @@ extern "C" void irq_vblank()
 }
 
 extern "C" void my_irq_handler();
+
+int writePowerManagement(int reg, int cmd)
+{
+	int oldIME = enterCriticalSection();
+	while (REG_SPICNT & SPI_BUSY);
+	REG_SPICNT = SPI_ENABLE | SPI_BAUD_1MHz | SPI_BYTE_MODE | SPI_CONTINUOUS | SPI_DEVICE_POWER;
+	REG_SPIDATA = reg;
+	while (REG_SPICNT & SPI_BUSY);
+	REG_SPICNT = SPI_ENABLE | SPI_BAUD_1MHz | SPI_BYTE_MODE | SPI_DEVICE_POWER;
+	REG_SPIDATA = cmd;
+	while (REG_SPICNT & SPI_BUSY);
+	leaveCriticalSection(oldIME);
+	return REG_SPIDATA & 0xFF;
+}
 
 int main()
 {
@@ -282,6 +297,18 @@ int main()
 				//case 0xC5://fifo_stop_sound_command
 				//REG_SOUND[0].CNT = SOUND_CHANNEL_0_SETTINGS;
 				//	break;
+			case 0x0400010F:
+				{
+					u8 pm = writePowerManagement(4 | PM_READ_REGISTER, 0);
+					if (!(pm & (1 << 6)))
+						break;
+					u8 lvl = (pm & 3);
+					lvl++;
+					pm &= ~3;
+					pm |= lvl & 3;
+					writePowerManagement(4, pm);
+					break;
+				}
 		}
 	}
 	return 0;
