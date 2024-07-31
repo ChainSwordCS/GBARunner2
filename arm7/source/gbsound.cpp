@@ -212,6 +212,13 @@ static void calcChannelVolume(int channel, int& volumeL, int& shiftL, int& volum
 		volumeR = 0;
 		shiftR = 3;
 	}
+	
+	// hack: reduce volume of GB channels outputting in mono
+	if (volumeL == volumeR)
+	{
+		volumeL >>= 1; // volumeL = volumeL / 2;
+		volumeR = volumeL;
+	}
 }
 
 static void updateChannelVolume(int channel)
