@@ -8,6 +8,8 @@
 #include "dldi_handler.h"
 #include "../../common/fifo.h"
 #include "../../common/common_defs.s"
+#include "../../common/nds.h"
+#include "../../common/gba.h"
 #include "rtc.h"
 
 static bool sPrevTouchDown = false;
@@ -35,6 +37,15 @@ static u32 sRateCounter;
 
 extern "C" void irq_vcount()
 {
+#ifdef USE_GBA_ADJUSTED_SYNC
+	sRateCounter += (GBA_CYCLES_PER_FRAME << 1) - NDS_CYCLES_PER_FRAME;
+	if(sRateCounter >= NDS_CYCLES_PER_LINE)
+	{
+		sRateCounter -= NDS_CYCLES_PER_LINE;
+		while(REG_DISPSTAT & DISP_IN_HBLANK);
+		*(vu16*)0x04000006 = *(vu16*)0x04000006;//repeat line
+	}
+#else
 	sRateCounter += 484839276;
 	if(sRateCounter >= 1116733440)
 	{
@@ -42,6 +53,7 @@ extern "C" void irq_vcount()
 		while(REG_DISPSTAT & DISP_IN_HBLANK);
 		*(vu16*)0x04000006 = *(vu16*)0x04000006;//repeat line
 	}
+#endif
 }
 
 extern "C" void my_irq_handler();
@@ -77,10 +89,20 @@ int main()
 
 #if defined(USE_DSI_16MB)
 	//enable 16 MB mode
-	*((vu32*)0x04004008) = (*((vu32*)0x04004008) & ~(3 << 14)) | (2 << 14); 
+	*((vu32*)0x04004008) = (*((vu32*)0x04004008) & ~(3 << 14)) | (2 << 14);
 #elif defined(USE_3DS_32MB)
 	//enable 32 MB mode
 	*((vu32*)0x04004008) = (*((vu32*)0x04004008) & ~(3 << 14)) | (3 << 14); 
+#endif
+#if defined(USE_DSI_16MB) || defined(USE_3DS_32MB)
+	//enable nwram clock
+	*((vu16*)0x04004004) |= (1 << 7);
+	//make sure nwram is unmapped
+	*((vu32*)0x04004054) = 0;
+	*((vu32*)0x04004058) = 0;
+	*((vu32*)0x0400405C) = 0;
+	//enable nwram and sndext 
+	*((vu32*)0x04004008) |= (1 << 25) | (1 << 21);
 #endif
 
 	REG_IME = 1;

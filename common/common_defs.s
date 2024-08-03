@@ -6,6 +6,9 @@
 //#define USE_DSI_16MB
 //#define USE_3DS_32MB
 
+#define USE_GBA_ADJUSTED_SYNC
+
+//this is currently broken
 //#define USE_LOW_LATENCY_IRQ_AUDIO
 
 #if defined(USE_DSI_16MB)
@@ -22,7 +25,16 @@
 #define MAIN_MEMORY_END     0x02400000
 #endif
 
+#if defined(USE_DSI_16MB) || defined(USE_3DS_32MB)
+#define USE_DSP_AUDIO
+#endif
+
+#ifndef USE_DSP_AUDIO
+//#define USE_MP2000_PATCH
+#endif
+
 #define SD_CACHE_SIZE	                    (400 * 1024)
+
 #define GBARUNNER_DATA_SIZE                 0x1C0000
 
 #ifdef USE_3DS_32MB
@@ -74,7 +86,7 @@
 #define extKeys_uncached (open_menu_irq_flag_uncached + 4)
 
 #ifdef USE_LOW_LATENCY_IRQ_AUDIO
-#define gbaDsndChanIrqFlags_uncached (open_menu_irq_flag_uncached + 4)
+#define gbaDsndChanIrqFlags_uncached (extKeys_uncached + 4)
 #define gbaDsndChans0_uncached ((gbaDsndChanIrqFlags_uncached + 2 + 0x1F) & ~0x1F)
 #endif
 

@@ -1,14 +1,17 @@
 #include <nds.h>
 #include <string.h>
 #include "timer.h"
+#include "../../common/common_defs.s"
 #include "../../common/fifo.h"
 #include "../../common/sd_vram.h"
 #include "lock.h"
 #include "system.h"
 #include "sound.h"
 
+#ifndef USE_GBA_ADJUSTED_SYNC
 #define USE_ACTUAL_RATE
-#define ACCESS_MAIN_MEM_DIRECT
+#endif
+//#define ACCESS_MAIN_MEM_DIRECT
 
 #define SOUND_BUFFER_SIZE	8192
 
@@ -75,7 +78,11 @@ void gba_sound_init()
 	REG_SOUNDBIAS = 0x200;
 #if defined(USE_DSI_16MB) || defined(USE_3DS_32MB)
 	REG_SOUNDEXCNT = 0;
+#ifdef USE_DSP_AUDIO
+	REG_SOUNDEXCNT = SOUNDEXCNT_ENABLE_SOMETHING | SOUNDEXCNT_FREQ_32 | SOUNDEXCNT_NTR_DSP_RATIO_0_8;
+#else
 	REG_SOUNDEXCNT = SOUNDEXCNT_ENABLE_SOMETHING | SOUNDEXCNT_FREQ_47 | SOUNDEXCNT_NTR_DSP_RATIO_8_0;
+#endif
 #endif
 	soundBufferWriteOffset = 0;
 	vram_cd->sound_emu_work.req_read_ptr = 0;
