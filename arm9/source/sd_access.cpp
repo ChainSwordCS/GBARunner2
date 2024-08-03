@@ -21,7 +21,7 @@
 #include "dsp/DspProcess.h"
 #include "dsp/twlwram.h"
 #include "dsp/dsp_ipc.h"
-#include "GBARunner2_cdc.h"
+//#include "GBARunner2_cdc.h"
 #include "sd_access.h"
 
 //#define DONT_CREATE_SAVE_FILES

@@ -26,7 +26,7 @@
 #endif
 
 #if defined(USE_DSI_16MB) || defined(USE_3DS_32MB)
-#define USE_DSP_AUDIO
+//#define USE_DSP_AUDIO
 #endif
 
 #ifndef USE_DSP_AUDIO
